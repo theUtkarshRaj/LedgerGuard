@@ -3,6 +3,12 @@
 **LedgerGuard** — A production-style REST API & Modern React application for a financial ledger. 
 It features clear layering (routes through services), robust configuration that fails fast, and architectural choices aimed at safe behavior under role and account changes.
 
+### 🌍 Live Deployments
+- **Frontend (Vercel)**: [https://ledger-guard-zscs-ewkbffc6q-theutkarshraj-6723s-projects.vercel.app/](https://ledger-guard-zscs-ewkbffc6q-theutkarshraj-6723s-projects.vercel.app/)
+- **Backend API (Render)**: [https://ledgerguard.onrender.com/](https://ledgerguard.onrender.com/)
+
+---
+
 This project is structured as a Monorepo containing:
 - **Express + Prisma** API under `backend/`
 - **Vite + React** UI under `frontend/`
