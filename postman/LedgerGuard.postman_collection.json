@@ -1,0 +1,188 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-ledger-guard-api",
+    "name": "LedgerGuard API",
+    "description": "Import this collection, set `baseUrl` (default http://localhost:5000), run **Auth → Login (admin)** to store `token`, then call protected routes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Demo User\",\n  \"email\": \"newuser@demo.local\",\n  \"password\": \"ChangeMe!123\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          }
+        },
+        {
+          "name": "Login (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.data && j.data.token) pm.collectionVariables.set('token', j.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@demo.local\",\n  \"password\": \"ChangeMe!123\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users (ADMIN)",
+      "item": [
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/users?page=1&limit=20"
+          }
+        },
+        {
+          "name": "Create user",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Analyst Two\",\n  \"email\": \"analyst2@demo.local\",\n  \"password\": \"ChangeMe!123\",\n  \"role\": \"ANALYST\",\n  \"isActive\": true\n}"
+            },
+            "url": "{{baseUrl}}/api/users"
+          }
+        },
+        {
+          "name": "Get user by id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/users/1"
+          }
+        },
+        {
+          "name": "Patch user (deactivate)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": false\n}"
+            },
+            "url": "{{baseUrl}}/api/users/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Records (ADMIN / ANALYST)",
+      "item": [
+        {
+          "name": "List records",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/records?limit=20"
+          }
+        },
+        {
+          "name": "Create record (optional userId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"120.50\",\n  \"type\": \"EXPENSE\",\n  \"category\": \"Postman\",\n  \"date\": \"2026-04-03T12:00:00.000Z\",\n  \"note\": \"Omit userId to default owner to the authenticated admin.\"\n}"
+            },
+            "url": "{{baseUrl}}/api/records"
+          }
+        },
+        {
+          "name": "Patch record",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Updated via Postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/records/1"
+          }
+        },
+        {
+          "name": "Delete record (soft)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/records/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Main Dashboard (Unified)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/dashboard?limit=10"
+          }
+        },
+        {
+          "name": "Trends",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/dashboard/trends?granularity=month"
+          }
+        }
+      ]
+    }
+  ]
+}
