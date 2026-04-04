@@ -1,7 +1,6 @@
 # LedgerGuard
 
-**LedgerGuard** — A production-style REST API & Modern React application for a financial ledger. 
-It features clear layering (routes through services), robust configuration that fails fast, and architectural choices aimed at safe behavior under role and account changes.
+**LedgerGuard** — A REST API and React app for a financial ledger. It uses clear layering (routes → controllers → services), environment validation that fails fast on misconfiguration, and database-backed role checks so access stays correct when roles or accounts change.
 
 ### 🌍 Live Deployments
 - **Frontend (Vercel)**: [https://ledger-guard-three.vercel.app/](https://ledger-guard-three.vercel.app/)
@@ -12,6 +11,19 @@ It features clear layering (routes through services), robust configuration that 
 This project is structured as a Monorepo containing:
 - **Express + Prisma** API under `backend/`
 - **Vite + React** UI under `frontend/`
+
+## Assignment Mapping
+
+How this project lines up with common backend internship requirements:
+
+- **User & Role Management** — Registration and login, JWT sessions, ADMIN / ANALYST / VIEWER roles, admin user directory and updates (including activation).
+- **Financial Records CRUD** — Paginated ledger listing with filters, create and update for admins, and removal via soft delete.
+- **Dashboard Summary APIs** — Endpoints that return **total income**, **total expenses**, **net balance**, **category breakdown**, **recent activity**, and **trends** over time (see `/api/dashboard` and focused `/api/dashboard/*` routes).
+- **Access Control** — Middleware-based JWT verification and role restrictions (`protect`, `restrictTo`) applied at the route layer.
+- **Validation & Error Handling** — Zod schemas for bodies and query parameters; controllers map validation and service errors to appropriate HTTP status codes with a centralized error handler.
+- **Data Persistence** — PostgreSQL with Prisma (schema, migrations, seed data, and `Decimal` fields for monetary values).
+
+---
 
 ### Architecture (matches `PROCESS.md`)
 
@@ -78,15 +90,25 @@ The `npm run db:seed` command sets up the following initial accounts:
 
 ---
 
+## Assumptions
+
+- **Admin** has full control: user management and full ledger operations (create, read, update, soft delete).
+- **Analyst** can read ledger data and use analytics/insights endpoints; they do not manage users or mutate records.
+- **Viewer** is limited to dashboard aggregates; fine-grained record lists and some owner-identifying fields are omitted (see `dashboard.controller.js`).
+- **Soft delete** is used for ledger rows (`isDeleted`) instead of physical removal. **Users** are turned off with **`isActive`** rather than deleted in normal operation.
+
+---
+
 ## ✨ Features & Optimizations
 
-- **Auth & Role Authorization**: JWT payloads carry exclusively the `userId`. The backend actively validates the role on every protected request. This ensures that administrative role changes (or account deactivations) take place instantly without waiting for local tokens to expire.
-- **Unified Summary Endpoint**: A heavily optimized `/api/dashboard` route concurrently aggregates balance logic and analytics via `Promise.all()`, drastically minimizing network congestion.
-- **Imperative Reactive Fetching**: The React frontend guarantees zero-waste data-streaming by terminating redundant React Strict Mode mount-cycles using native `AbortController` cancellation policies.
-- **Strict Data Bounding**: List endpoints for **users** and **records** cap `limit` at **20** via Zod; dashboard list-style queries use their own validated caps (e.g. recent items up to **50**).
-- **Database Index Optimization**: Deep operations utilize the composite index `@@index([userId, createdAt, type])` providing mathematical maximum throughput for nested ledger analytics.
-- **Money Handling Intactness**: Money is stored securely using `Decimal(12,2)` in PostgreSQL to prevent floating-point anomalies, but transmitted safely as raw strings for JSON integrity.
-- **Soft delete (ledger rows)**: Removing a **record** sets **`isDeleted`** instead of destroying the row. **Users** are disabled via **`isActive`** (no hard delete in normal flows).
+- **Auth & role checks** — JWT carries only `userId`; each protected request reloads the user from the database so role changes and deactivations apply immediately without waiting for token expiry.
+- **Dashboard** — The UI and `/api/dashboard` (plus `/api/dashboard/overview`, `summary`, `categories`, `recent`, `trends`) expose **total income**, **total expense**, **net balance**, **breakdown by category**, **recent activity**, and **time-based trends**. Focused routes allow the frontend to load sections in parallel where useful.
+- **Summary performance** — Dashboard aggregation work is run concurrently with `Promise.all()` where appropriate to keep response times low.
+- **Frontend requests** — In-flight fetches are aborted on unmount or dependency changes (`AbortController`), which avoids duplicate requests under React Strict Mode double-mounting.
+- **Pagination limits** — List endpoints for **users** and **records** cap `limit` at **20** via Zod; dashboard-style queries use their own validated caps (for example, recent items up to **50**).
+- **Indexing** — A composite index on `userId`, `createdAt`, and `type` supports efficient filtered and ordered reads for ledger analytics.
+- **Money** — Amounts are stored as `Decimal(12,2)` in PostgreSQL and exposed as strings in JSON to avoid floating-point rounding issues in clients.
+- **Soft delete (ledger rows)** — Removing a **record** sets **`isDeleted`** instead of deleting the row. **Users** are disabled via **`isActive`** (no hard delete in normal flows).
 
 ---
 
@@ -118,5 +140,19 @@ All JSON API routes are under **`/api`**. Flow: **`routes` → `controllers` →
 | `PATCH`, `DELETE /api/records/:id` | **ADMIN** | Update or soft-delete a record |
 | `GET /api/dashboard` | Authenticated (**VIEWER** allowed) | Combined dashboard data |
 | `GET /api/dashboard/overview`, `GET /api/dashboard/summary`, `GET /api/dashboard/categories`, `GET /api/dashboard/recent`, `GET /api/dashboard/trends` | Authenticated (**VIEWER** allowed) | Focused aggregates; **VIEWER** omits some owner-identifying fields (see `dashboard.controller.js`) |
+
+## Screenshots
+
+**Dashboard UI**
+
+![Dashboard UI](images/dashboard.png "Dashboard UI")
+
+**Records page**
+
+![Records page](images/records.png "Records page")
+
+**User management**
+
+![User management](images/users.png "User management")
 
 To exercise routes manually, import **`postman/LedgerGuard.postman_collection.json`**. Run **Auth → Login (admin)** to set the `token`, then call protected routes.
