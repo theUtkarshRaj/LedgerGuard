@@ -2,15 +2,26 @@
 
 **LedgerGuard** — A REST API and React app for a financial ledger. It uses clear layering (routes → controllers → services), environment validation that fails fast on misconfiguration, and database-backed role checks so access stays correct when roles or accounts change.
 
-This repository is my submission for the **Finance Data Processing and Access Control Backend** assignment. It focuses on **API design**, **data modeling**, **business logic**, **role-based access control**, and **dashboard-oriented aggregations**, with a small React UI to exercise the API. **Live API and UI links** are below; **assumptions and tradeoffs** are documented under [Assumptions](#assumptions).
+This repository is my submission for the **Finance Data Processing and Access Control Backend** assignment. It focuses on **API design**, **data modeling**, **business logic**, **role-based access control**, and **dashboard-oriented aggregations**, with a small React UI to exercise the API. **Live deployments**, **pre-seeded demo credentials**, and **assumptions** follow below ([Assumptions](#assumptions)).
 
 ### 🌍 Live Deployments
-- **Frontend (Vercel)**: [https://ledger-guard-three.vercel.app/](https://ledger-guard-three.vercel.app/)
-- **Backend API (Render)**: [https://ledgerguard.onrender.com/](https://ledgerguard.onrender.com/)
+
+- **Frontend (Vercel):** [https://ledger-guard-three.vercel.app/](https://ledger-guard-three.vercel.app/)
+- **Backend API (Render):** [https://ledgerguard.onrender.com/](https://ledgerguard.onrender.com/)
+
+### Demo Credentials (Pre-seeded)
+
+Use the same password for every account below—sign in on the **deployed frontend** or, locally, after `npm run db:seed` in `backend/`.
+
+| Email | Password | Role | Access level |
+|-------|----------|------|--------------|
+| `admin@demo.local` | `ChangeMe!123` | **ADMIN** | Full CRUD over users and records |
+| `analyst@demo.local` | `ChangeMe!123` | **ANALYST** | View records and analytics |
+| `viewer@demo.local` | `ChangeMe!123` | **VIEWER** | View aggregated dashboard data only |
 
 ---
 
-This project is structured as a Monorepo containing:
+This project is structured as a monorepo containing:
 - **Express + Prisma** API under `backend/`
 - **Vite + React** UI under `frontend/`
 
@@ -33,18 +44,18 @@ How this project maps to the assignment’s **core requirements**:
 
 | Criterion | Where to look |
 |-----------|----------------|
-| Backend design | `backend/src/` — `routes` → `controllers` → `services` → Prisma; `backend/src/app.js`, `PROCESS.md` |
+| Backend design | `backend/src/` — `routes` → `controllers` → `services` → Prisma; `backend/src/app.js` |
 | Logical thinking / business rules | `backend/src/services/` — user, record, dashboard, auth logic |
 | Functionality | API table below; run **Quick Start** and tests |
 | Code quality | Controllers (thin), services (rules), shared errors and validators |
 | Database / modeling | `backend/prisma/schema.prisma`, migrations |
 | Validation / reliability | `backend/src/validators/`, `middleware/`, `utils/AppError.js`, tests |
-| Documentation | This README, **[PROCESS.md](./PROCESS.md)**, [Assumptions](#assumptions) |
+| Documentation | This README, [Assumptions](#assumptions) |
 | Thoughtfulness | Rate limit, DB-backed role refresh on each request, `Decimal` for money, screenshots |
 
 ---
 
-### Architecture (matches `PROCESS.md`)
+### Architecture
 
 HTTP handling follows **`routes` → `controllers` → `services` → Prisma** (or `$queryRaw` where needed). Entry: `backend/server.js` (`validateEnv`, then listen); app wiring in `backend/src/app.js` (CORS, JSON, rate limit on `/api`, route mounts, global error handler).
 
@@ -58,7 +69,7 @@ HTTP handling follows **`routes` → `controllers` → `services` → Prisma** (
 
 **Auth model:** JWT payload carries only **`userId`** (`sub`). On each protected request, the API loads the user from the database and attaches **`req.user`** (including **role** and **isActive**), so role changes and deactivations apply immediately without waiting for token expiry.
 
-For a full route-by-route map, see **[PROCESS.md](./PROCESS.md)**.
+For HTTP routes and roles, see the **API Details & Routing** section below.
 
 ---
 
@@ -76,7 +87,7 @@ copy .env.example .env   # Set your DATABASE_URL + JWT_SECRET here
 ```bash
 npm install
 npx prisma migrate deploy
-npm run db:seed          # Populates database with the Demo Roles below
+npm run db:seed          # Seeds the demo accounts listed under Demo Credentials (Pre-seeded)
 npm start                # Backend starts listening on http://localhost:5000
 ```
 
@@ -95,17 +106,6 @@ cd frontend
 npm run build
 ```
 *Note: Set `VITE_API_BASE_URL` when building if the API is hosted remotely on a different domain.*
-
----
-
-## 🔐 Roles (Seed Data)
-The `npm run db:seed` command sets up the following initial accounts:
-
-| Email | Password | Role | Access Level |
-|-------|----------|------|--------------|
-| `admin@demo.local` | `ChangeMe!123` | **ADMIN** | Full CRUD over users and records |
-| `analyst@demo.local` | `ChangeMe!123` | **ANALYST** | View records and analytics |
-| `viewer@demo.local` | `ChangeMe!123` | **VIEWER** | View aggregated dashboard data only |
 
 ---
 
@@ -161,6 +161,8 @@ All JSON API routes are under **`/api`**. Flow: **`routes` → `controllers` →
 | `PATCH`, `DELETE /api/records/:id` | **ADMIN** | Update or soft-delete a record |
 | `GET /api/dashboard` | Authenticated (**VIEWER** allowed) | Combined dashboard data |
 | `GET /api/dashboard/overview`, `GET /api/dashboard/summary`, `GET /api/dashboard/categories`, `GET /api/dashboard/recent`, `GET /api/dashboard/trends` | Authenticated (**VIEWER** allowed) | Focused aggregates; **VIEWER** omits some owner-identifying fields (see `dashboard.controller.js`) |
+
+---
 
 ## Screenshots
 
