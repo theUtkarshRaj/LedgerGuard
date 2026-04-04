@@ -2,12 +2,18 @@
 
 **LedgerGuard** — A REST API and React app for a financial ledger. It uses clear layering (routes → controllers → services), environment validation that fails fast on misconfiguration, and database-backed role checks so access stays correct when roles or accounts change.
 
-This repository is my submission for the **Finance Data Processing and Access Control Backend** assignment. It focuses on **API design**, **data modeling**, **business logic**, **role-based access control**, and **dashboard-oriented aggregations**, with a small React UI to exercise the API. **Live deployments**, **pre-seeded demo credentials**, and **assumptions** follow below ([Assumptions](#assumptions)).
+This repository is my submission for the **Finance Data Processing and Access Control Backend** assignment. This **README** is the quick path: live app, credentials, API table, and setup. For architecture, decisions, and full assignment discussion, open **[LedgerGuard_Submission.pdf](./docs/LedgerGuard_Submission.pdf)** in `docs/`. **Assumptions** are in [Assumptions](#assumptions).
+
+**Reviewer flow:** skim this page → try the **live demo** → read the **PDF** for depth.
 
 ### 🌍 Live Deployments
 
 - **Frontend (Vercel):** [https://ledger-guard-three.vercel.app/](https://ledger-guard-three.vercel.app/)
 - **Backend API (Render):** [https://ledgerguard.onrender.com/](https://ledgerguard.onrender.com/)
+
+### Detailed submission (PDF)
+
+**[LedgerGuard_Submission.pdf](./docs/LedgerGuard_Submission.pdf)** — design, implementation notes, and how the work maps to the brief.
 
 ### Demo Credentials (Pre-seeded)
 
@@ -22,8 +28,10 @@ Use the same password for every account below—sign in on the **deployed fronte
 ---
 
 This project is structured as a monorepo containing:
-- **Express + Prisma** API under `backend/`
-- **Vite + React** UI under `frontend/`
+
+- **`docs/`** — detailed submission write-up ([LedgerGuard_Submission.pdf](./docs/LedgerGuard_Submission.pdf))
+- **`backend/`** — Express + Prisma API
+- **`frontend/`** — Vite + React UI
 
 ## Assignment mapping (core requirements)
 
@@ -50,7 +58,7 @@ How this project maps to the assignment’s **core requirements**:
 | Code quality | Controllers (thin), services (rules), shared errors and validators |
 | Database / modeling | `backend/prisma/schema.prisma`, migrations |
 | Validation / reliability | `backend/src/validators/`, `middleware/`, `utils/AppError.js`, tests |
-| Documentation | This README, [Assumptions](#assumptions) |
+| Documentation | This README, [docs/LedgerGuard_Submission.pdf](./docs/LedgerGuard_Submission.pdf), [Assumptions](#assumptions) |
 | Thoughtfulness | Rate limit, DB-backed role refresh on each request, `Decimal` for money, screenshots |
 
 ---
