@@ -4,7 +4,7 @@
 It features clear layering (routes through services), robust configuration that fails fast, and architectural choices aimed at safe behavior under role and account changes.
 
 ### 🌍 Live Deployments
-- **Frontend (Vercel)**: [https://ledger-guard-zscs-ewkbffc6q-theutkarshraj-6723s-projects.vercel.app/](https://ledger-guard-zscs-ewkbffc6q-theutkarshraj-6723s-projects.vercel.app/)
+- **Frontend (Vercel)**: [https://ledger-guard-three.vercel.app/](https://ledger-guard-three.vercel.app/)
 - **Backend API (Render)**: [https://ledgerguard.onrender.com/](https://ledgerguard.onrender.com/)
 
 ---
