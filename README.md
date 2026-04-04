@@ -85,7 +85,7 @@ For HTTP routes and roles, see the **API Details & Routing** section below.
 
 ### 1. Database & API (`backend/`)
 ```bash
-git clone <repository-url>
+git clone https://github.com/theUtkarshRaj/LedgerGuard.git
 cd backend
 copy .env.example .env   # Set your DATABASE_URL + JWT_SECRET here
 ```
