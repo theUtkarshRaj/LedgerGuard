@@ -12,6 +12,12 @@ function readBaseUrl() {
   return String(raw).replace(/\/$/, "");
 }
 
+if (import.meta.env.PROD && readBaseUrl() === "") {
+  console.error(
+    "[LedgerGuard] VITE_API_BASE_URL is unset. The UI will call /api on this host and get 404. In Vercel: Project → Settings → Environment Variables → add VITE_API_BASE_URL=https://ledgerguard.onrender.com (no trailing slash), then redeploy."
+  );
+}
+
 export function apiPath(path) {
   const p = path.startsWith("/") ? path : `/${path}`;
   const base = readBaseUrl();

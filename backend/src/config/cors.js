@@ -8,22 +8,31 @@ const DEV_LOCAL_ORIGINS = [
   "http://127.0.0.1:5173",
 ];
 
+/** Split `CLIENT_URL` on commas so production can allow Vercel prod + preview origins. */
+function parseClientOrigins(raw) {
+  if (raw == null || String(raw).trim() === "") return [];
+  return String(raw)
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 /**
  * Builds the set of browser origins allowed by CORS.
- * - Production: only `CLIENT_URL` (must be set; validated at startup).
- * - Non-production: `CLIENT_URL` if set, plus local dev origins.
+ * - Production: only origins from `CLIENT_URL` (must be set; validated at startup).
+ * - Non-production: `CLIENT_URL` origins if set, plus local dev origins.
  */
 function getAllowedOrigins() {
   const isProd = process.env.NODE_ENV === "production";
-  const clientUrl = process.env.CLIENT_URL?.trim();
+  const clientOrigins = parseClientOrigins(process.env.CLIENT_URL);
   const allowed = new Set();
 
   if (isProd) {
-    if (clientUrl) allowed.add(clientUrl);
+    for (const o of clientOrigins) allowed.add(o);
     return allowed;
   }
 
-  if (clientUrl) allowed.add(clientUrl);
+  for (const o of clientOrigins) allowed.add(o);
   for (const o of DEV_LOCAL_ORIGINS) allowed.add(o);
   return allowed;
 }
@@ -52,5 +61,6 @@ const corsMiddleware = cors(corsOptionsDelegate());
 module.exports = {
   corsMiddleware,
   getAllowedOrigins,
+  parseClientOrigins,
   DEV_LOCAL_ORIGINS,
 };
