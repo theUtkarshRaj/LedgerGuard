@@ -2,6 +2,8 @@
 
 **LedgerGuard** — A REST API and React app for a financial ledger. It uses clear layering (routes → controllers → services), environment validation that fails fast on misconfiguration, and database-backed role checks so access stays correct when roles or accounts change.
 
+This repository is my submission for the **Finance Data Processing and Access Control Backend** assignment. It focuses on **API design**, **data modeling**, **business logic**, **role-based access control**, and **dashboard-oriented aggregations**, with a small React UI to exercise the API. **Live API and UI links** are below; **assumptions and tradeoffs** are documented under [Assumptions](#assumptions).
+
 ### 🌍 Live Deployments
 - **Frontend (Vercel)**: [https://ledger-guard-three.vercel.app/](https://ledger-guard-three.vercel.app/)
 - **Backend API (Render)**: [https://ledgerguard.onrender.com/](https://ledgerguard.onrender.com/)
@@ -12,16 +14,33 @@ This project is structured as a Monorepo containing:
 - **Express + Prisma** API under `backend/`
 - **Vite + React** UI under `frontend/`
 
-## Assignment Mapping
+## Assignment mapping (core requirements)
 
-How this project lines up with common backend internship requirements:
+How this project maps to the assignment’s **core requirements**:
 
-- **User & Role Management** — Registration and login, JWT sessions, ADMIN / ANALYST / VIEWER roles, admin user directory and updates (including activation).
-- **Financial Records CRUD** — Paginated ledger listing with filters, create and update for admins, and removal via soft delete.
-- **Dashboard Summary APIs** — Endpoints that return **total income**, **total expenses**, **net balance**, **category breakdown**, **recent activity**, and **trends** over time (see `/api/dashboard` and focused `/api/dashboard/*` routes).
-- **Access Control** — Middleware-based JWT verification and role restrictions (`protect`, `restrictTo`) applied at the route layer.
-- **Validation & Error Handling** — Zod schemas for bodies and query parameters; controllers map validation and service errors to appropriate HTTP status codes with a centralized error handler.
-- **Data Persistence** — PostgreSQL with Prisma (schema, migrations, seed data, and `Decimal` fields for monetary values).
+1. **User and role management** — Create and list users (admin), assign **ADMIN** / **ANALYST** / **VIEWER**, toggle **active/inactive** (`isActive`), register + login, JWT sessions. Role behavior is enforced on every protected request (see middleware and route `restrictTo` usage).
+2. **Financial records management** — Records support **amount**, **type** (income/expense), **category**, **date**, and **notes/description**. **Create**, **list** (pagination + filters), **update**, and **delete** (soft delete) are implemented; filters include **date**, **category**, **type**, and **search** on the list endpoint.
+3. **Dashboard summary APIs** — Aggregated data for a finance dashboard: **total income**, **total expenses**, **net balance**, **category-wise totals**, **recent activity**, and **trends** (time-bucketed). Implemented as `GET /api/dashboard` plus focused `GET /api/dashboard/*` routes (see API table below).
+4. **Access control logic** — **VIEWER**: dashboard-style reads only (no record mutations). **ANALYST**: read records + dashboard/summary access. **ADMIN**: full user and record management. Enforced with **middleware** (`protect`, `restrictTo`) on routes.
+5. **Validation and error handling** — **Zod** validation for bodies and queries; **consistent JSON errors**; **appropriate HTTP status codes**; invalid operations rejected in services (e.g. permissions, not found) via a shared error type and global handler.
+6. **Data persistence** — **PostgreSQL** with **Prisma** (schema, migrations, seed). Monetary amounts use **decimal** storage; see `backend/prisma/schema.prisma`.
+
+**Optional enhancements included:** JWT authentication, **pagination** for users and records, **search** on records, **soft delete** for ledger rows, **rate limiting** on `/api`, **unit and integration tests**, **Postman collection** (`postman/LedgerGuard.postman_collection.json`), and **deployed** API + frontend (links above).
+
+---
+
+### For evaluators (rubric crosswalk)
+
+| Criterion | Where to look |
+|-----------|----------------|
+| Backend design | `backend/src/` — `routes` → `controllers` → `services` → Prisma; `backend/src/app.js`, `PROCESS.md` |
+| Logical thinking / business rules | `backend/src/services/` — user, record, dashboard, auth logic |
+| Functionality | API table below; run **Quick Start** and tests |
+| Code quality | Controllers (thin), services (rules), shared errors and validators |
+| Database / modeling | `backend/prisma/schema.prisma`, migrations |
+| Validation / reliability | `backend/src/validators/`, `middleware/`, `utils/AppError.js`, tests |
+| Documentation | This README, **[PROCESS.md](./PROCESS.md)**, [Assumptions](#assumptions) |
+| Thoughtfulness | Rate limit, DB-backed role refresh on each request, `Decimal` for money, screenshots |
 
 ---
 
@@ -91,6 +110,8 @@ The `npm run db:seed` command sets up the following initial accounts:
 ---
 
 ## Assumptions
+
+The brief allows sensible assumptions where details are unspecified; these are the ones applied here.
 
 - **Admin** has full control: user management and full ledger operations (create, read, update, soft delete).
 - **Analyst** can read ledger data and use analytics/insights endpoints; they do not manage users or mutate records.
